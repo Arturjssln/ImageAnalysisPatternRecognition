@@ -1,5 +1,8 @@
 data/*
 !data/*.gz
-!data/lab-03-data/part2/*
+!data/lab-03-data/part2/t10k-images-idx3-ubyte.gz
+!data/lab-03-data/part2/t10k-labels-idx1-ubyte.gz
+!data/lab-03-data/part2/train-images-idx3-ubyte.gz
+!data/lab-03-data/part2/train-labels-idx1-ubyte.gz
 src/__pycache__/wagner_fisher.cpython-37.pyc
 src/.ipynb_checkpoints/lab_02_object_description-checkpoint.ipynb
