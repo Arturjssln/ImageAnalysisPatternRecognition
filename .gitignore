@@ -6,3 +6,5 @@ data/*
 !data/lab-03-data/part2/train-labels-idx1-ubyte.gz
 src/__pycache__/wagner_fisher.cpython-37.pyc
 src/.ipynb_checkpoints/lab_02_object_description-checkpoint.ipynb
+project/.DS_Store
+.DS_Store
