@@ -1,16 +1,15 @@
 import keras
-import keras.datasets.mnist as mnist 
+from keras.datasets import mnist
 from keras.layers import Dense, Activation, Flatten, Conv2D, MaxPooling2D
 from keras.models import Sequential, load_model
 from keras.utils import to_categorical
 import numpy as np
-import matplotlib.pyplot as plt
 import cv2
 
 class Net:
 
     def __init__(self):
-        pass
+        self.model = None
 
     def load_model(self, filename='model.h5'):
         try:
@@ -66,6 +65,8 @@ class Net:
         """
         Predict the digit from a frame, but with a resize to fit our Net
         """
+        if self.model is None:
+            raise NameError('model has not been trained')
         resized = cv2.resize(digit_frame, (28, 28), interpolation = cv2.INTER_CUBIC)
         gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
         resized = gray.reshape(-1, 28, 28, 1)  

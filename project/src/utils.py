@@ -1,7 +1,12 @@
+import heapq
 from skimage.color import rgb2gray
 import numpy as np
 import skimage.filters as filt
-import heapq
+import cv2
+from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
+import Augmentor
+from sklearn.model_selection import cross_val_score, GridSearchCV
+from sklearn.svm import SVC
 
 def threshold(img, th1 = None, th2 = None):
     """
@@ -138,3 +143,40 @@ def crop_digit(frame, digit_pos, size=20):
     cropped_img = frame[int(digit_pos[1] - size): int(digit_pos[1] + size),
                         int(digit_pos[0] - size): int(digit_pos[0] + size)]
     return cropped_img
+
+MIN_CONTOUR_POINT = 20
+def find_contour(img, opencv_version):
+    """
+    Finds and returns the contour of the image
+    """
+    contour = []
+    if int(opencv_version) == 3:
+        _, contour, _ = cv2.findContours(
+            img, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_NONE)
+    else:
+        contour, _ = cv2.findContours(
+            img.copy(), mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_NONE)
+
+    contour_array = contour[0].reshape(-1, 2)
+    # minimum contour size required
+    if contour_array.shape[0] < MIN_CONTOUR_POINT:
+        contour_array = contour[1].reshape(-1, 2)
+    return contour_array
+
+
+def convert_contour(contour):
+    """
+    TODO
+    """
+    contour_complex = np.empty(contour.shape[:-1], dtype=complex)
+    contour_complex.real = contour[:, 0]
+    contour_complex.imag = contour[:, 1]
+    return contour_complex
+
+
+def find_descriptor(contour):
+    """
+    Finds and returns the Fourier-Descriptor from the image contour
+    """
+    return np.fft.fft(contour)
+
