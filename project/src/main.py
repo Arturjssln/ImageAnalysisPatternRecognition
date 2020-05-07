@@ -1,7 +1,10 @@
+"""
+main program
+"""
 import argparse
+import numpy as np
 import cv2
 from utils import find_objects, coor_object
-import numpy as np
 
 
 parser = argparse.ArgumentParser(description='IAPR Special Project.')
@@ -31,10 +34,13 @@ class Calculator:
         self.object_position = None
         self.arrow_position = None
         self.arrow_color = None
+        self.closest_pos = None
+        self.equation = ''
+        self.proximity_threshold = 20
 
     def __enter__(self):
         """
-        Importing the input video and creating the output video 
+        Importing the input video and creating the output video
         """
         print('Importing file...')
         # Using video from file:
@@ -45,7 +51,7 @@ class Calculator:
         self.out = cv2.VideoWriter(filename=self.output_path, fourcc=cv2.VideoWriter_fourcc(
             'M', 'J', 'P', 'G'), fps=2, frameSize=(frame_width, frame_height))
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value_, traceback_):
         """
         Releasing the input and output video
         """
@@ -57,6 +63,9 @@ class Calculator:
         self.out = None
 
     def process(self):
+        """
+        Process frames one by one to analyze
+        """
         if self.cap is None or self.out is None:
             print("ERROR : Use this function inside a with statement")
             return
@@ -67,10 +76,12 @@ class Calculator:
             if ret:
                 print('Processing frame #{}'.format(current_frame))
                 if current_frame == 0:
-                    self.object_position, self.arrow_position, self.arrow_color = find_objects(frame)
+                    self.object_position, self.arrow_position, self.arrow_color = \
+                        find_objects(frame)
                 else:
                     self.find_arrow(frame)
-                
+                    self.compute_closest_object()
+                    self.add_to_equation()
                 self.out.write(self.frame_display(frame))
             else:
                 break
@@ -87,11 +98,43 @@ class Calculator:
             mask, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10, 10)))
         self.arrow_position = coor_object(closing)
 
+    def compute_closest_object(self):
+        """
+        Find the closest object
+        """
+        min_dist = np.inf
+        for pos in self.object_position:
+            dist = (pos[0]-self.arrow_position[0])**2 + \
+                (pos[1]-self.arrow_position[1])**2
+            if dist < min_dist:
+                self.closest_pos = pos
+                min_dist = dist
+
+    def add_to_equation(self):
+        """
+        Add new object to equation if it is close enough
+        """
+        if (self.closest_pos[0]-self.arrow_position[0])**2 + \
+            (self.closest_pos[1]-self.arrow_position[1])**2 < \
+            self.proximity_threshold**2:
+            predicted = str(self.predict_object())
+            # If the equation is empty or if it is a new object, we add it
+            if len(self.equation) == 0 or predicted != self.equation[-2]:
+                self.equation += str(self.predict_object()) + ' '
+
+    def predict_object(self):
+        """
+        Predict object at closest position
+        """
+        
+        return ''
+
     def frame_display(self, frame):
         """
         Prepare frame for video
         """
         out = self.display_objects(frame)
+        out = self.display_equation(frame)
         return out
 
     def display_objects(self, frame):
@@ -115,6 +158,18 @@ class Calculator:
             frame, (int(top_left[0]), int(top_left[1])),
             (int(bottom_right[0]), int(bottom_right[1])),
             (0, 0, 255), thickness=2)
+        return frame
+
+    def display_equation(self, frame):
+        """
+        Display equation on frame
+        """
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        textsize = cv2.getTextSize(self.equation, font, 1, 2)[0]
+        text_x = (frame.shape[1] - textsize[0]) // 2
+        text_y = (frame.shape[0] + textsize[1]) * 3 // 4
+        frame = cv2.putText(frame, self.equation,
+                            (text_x, text_y), font, 1, (255, 0, 0), 2)
         return frame
 
 def main():
