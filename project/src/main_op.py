@@ -12,6 +12,7 @@ import Augmentor
 import glob
 from sklearn.model_selection import cross_val_score, GridSearchCV
 from sklearn.svm import SVC
+from sklearn.externals import joblib
 
 
 
@@ -123,6 +124,7 @@ def train_descriptors():
     print('Best Kernel: {}'.format(S.best_estimator_.kernel))
     print('Best Gamma: {}'.format(S.best_estimator_.gamma))
     final_model = S.best_estimator_
+    joblib.dump(S.best_estimator_, 'model_op.pkl', compress=1)
     print("Training set score for SVM: %f" % final_model.score(x_train, y_train))
 
 def process(frame):
