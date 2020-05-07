@@ -9,3 +9,4 @@ src/.ipynb_checkpoints/lab_02_object_description-checkpoint.ipynb
 project/.DS_Store
 .DS_Store
 *.json
+.vscode/settings.json
