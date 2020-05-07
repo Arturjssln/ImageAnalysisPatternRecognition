@@ -17,16 +17,10 @@ def threshold(img, th1 = None, th2 = None):
         out[np.where(img > th2)] = 0
     return out
 
-def remove_borders(image):
-
-    return image
 def check(list, val):
     """Function to check if a neighbor has label, if yes, it will return the label"""
-    # traverse in the list
-    for x_list in list:
-        # compare with all the values with val
-        if val > x_list and x_list > 0:
-            return x_list
+    if val > min(list) and min(list) > 0:
+        return min(list)
     return False
 
 
@@ -35,6 +29,14 @@ def labeling(img, label):
     out = np.zeros(np.shape(img), dtype = np.uint)
     out[np.where(img == label)] = 1
     return out
+
+
+def extract_object(image, label):
+    out = np.zeros(np.shape(image))
+    out[np.where(image == label)] = 1
+    pxl = sum(sum(out))
+    return out, pxl
+
 
 def find_objects(frame):
     plt.imshow(frame)
@@ -53,7 +55,7 @@ def find_objects(frame):
     print('threshold is', t)
     image_thres = threshold(image, t)
 
-    fig, axes = plt.subplots(1, 3, figsize=(12, 6))
+    fig, axes = plt.subplots(1, 3, figsize=(6, 6))
     axes[0].imshow(image)
     axes[1].imshow(image_thres)
 
@@ -65,7 +67,7 @@ def find_objects(frame):
     label = np.zeros((im_h,im_w), dtype=np.uint)
 
     # Iterating on each pixels of the image
-    nb_neighbors = 2
+    nb_neighbors = 10
     for i in range(1, im_h - nb_neighbors):
         for j in range(1, im_w - nb_neighbors):
             # Labeling each pixels of the foreground with same value as its neighbor
@@ -79,22 +81,36 @@ def find_objects(frame):
                     new_label += 1
 
     # Merging of labels for objects that are containing different labels
-    label2 = label
-    for i in range(1, im_h - 1):
-        for j in range(1, im_w - 1):
-            label_neighbors = [label2[i - 1, j + 1], label2[i, j + 1], label2[i + 1, j + 1], label2[i - 1, j],
-                               label2[i + 1, j], label2[i - 1, j - 1], label2[i, j - 1], label2[i + 1, j - 1]]
-            val_min = check(label_neighbors, label2[i, j])
-            if check(label_neighbors, label2[i, j]):
-                label2[np.where(label2 == label2[i, j])] = val_min
+    nb_neighbors2 = 2
 
-    print('plot the labels')
+    for i in range(1, im_h - nb_neighbors2):
+        for j in range(1, im_w - nb_neighbors2):
+            label_neighbors = [label[i + a, j + b] for a in range(- nb_neighbors2, nb_neighbors2 + 1)
+                               for b in range(- nb_neighbors2, nb_neighbors2 + 1)]
+            val_min = check(label_neighbors, label[i, j])
+            if check(label_neighbors, label[i, j]):
+                label[np.where(label == label[i, j])] = val_min
+
+
     axes[2].imshow(label)
-    plt.pause(100)
 
     label_unique = np.unique(label)
     # Background is not an object so we subtract 1
     nb_objects = len(label_unique) - 1
 
-    print('Frame 0 : There are {:d} objects.'.format(nb_objects))
+    print('Frame 0 : There are {:d} objects.'.format(nb_objects),'labels are', label_unique)
+
+    # plotting only object of a certain label
+    fig2, ax = plt.subplots(int(nb_objects / 5)+1, 5, figsize=(14, 8))
+    nb_pixels = []
+    for label_choice in range(1,nb_objects+1):
+        img, pxl = extract_object(label, label_unique[label_choice])
+        ax[int(label_choice / 5)][label_choice % 5].imshow(img)
+        ax[int(label_choice / 5)][label_choice % 5].set_title('%i pixels'%pxl)
+        nb_pixels.append(pxl)
+        print('for image', label_choice, 'there are ', pxl,'pixels')
+    plt.pause(100)
+
     #return frame
+
+
