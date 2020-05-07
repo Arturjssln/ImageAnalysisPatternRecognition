@@ -1,6 +1,7 @@
 import argparse
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 parser = argparse.ArgumentParser(description='IAPR Special Project.')
@@ -45,11 +46,15 @@ def display_objects(frame, object_position, arrow_position):
         (0, 0, 255), thickness=2)
     return frame
 
+def find_arrow(frame):
+    return frame
+
 def process(frame):
     """
     Processing image
     """
     object_position, arrow_position = find_object(frame)
+    position_arrow = find_arrow(frame)
     object_position = np.asarray([[283, 233], [468, 236], [
         487, 127], [295, 104], [161, 94], [370, 205], [198, 285]])
     arrow_position = [468, 300]
