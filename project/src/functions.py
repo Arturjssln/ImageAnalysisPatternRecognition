@@ -31,28 +31,34 @@ def labeling(img, label):
     return out
 
 
+def coor_object(object):
+    nn_zero_col = np.any(object, 0)
+    nn_zero_row = np.any(object, 1)
+    col = np.linspace(0, len(object[0]) - 1, num=len(object[0]), dtype=int)
+    row = np.linspace(0, len(object) - 1, num=len(object), dtype=int)
+    x = np.mean(col[nn_zero_col])
+    y = np.mean(row[nn_zero_row])
+    return [x, y]
+
 def extract_object(image, label):
     out = np.zeros(np.shape(image))
     out[np.where(image == label)] = 1
+    # get amount of pixels forming the object
     pxl = sum(sum(out))
-    return out, pxl
+    # get avg coordinates of object
+    coor = coor_object(out)
+    return out, pxl, coor
 
 
 def find_objects(frame):
-    plt.imshow(frame)
-    #plt.pause(1000)
     # reshape : remove black lines on the side (out of table)
     image = np.delete(frame, range(100), axis=1)
     image = np.delete(image, range(500, len(frame[0])), axis=1)
-    plt.imshow(image)
-    # plt.pause(1000)
     # from RGB colors to gray scale
     image = rgb2gray(image)
     # threshold on image to separate background from foreground
     # We are using an adaptive threshold that find the best threshold depending of the illumination
-    print('maximum gray value:', np.max(image))
     t = filt.threshold_otsu(image)
-    print('threshold is', t)
     image_thres = threshold(image, t)
 
     fig, axes = plt.subplots(1, 3, figsize=(6, 6))
@@ -103,12 +109,14 @@ def find_objects(frame):
     # plotting only object of a certain label
     fig2, ax = plt.subplots(int(nb_objects / 5)+1, 5, figsize=(14, 8))
     nb_pixels = []
+    avg_coor = []
     for label_choice in range(1,nb_objects+1):
-        img, pxl = extract_object(label, label_unique[label_choice])
+        img, pxl, coor = extract_object(label, label_unique[label_choice])
         ax[int(label_choice / 5)][label_choice % 5].imshow(img)
         ax[int(label_choice / 5)][label_choice % 5].set_title('%i pixels'%pxl)
+        ax[int(label_choice / 5)][label_choice % 5].scatter(coor[0], coor[1], s = 10, color='r', marker = 'o')
         nb_pixels.append(pxl)
-        print('for image', label_choice, 'there are ', pxl,'pixels')
+        avg_coor.append(coor)
     plt.pause(100)
 
     #return frame
