@@ -125,3 +125,16 @@ def find_objects(frame):
     
     return avg_coor, arrow_coord, arrow_color
 
+
+def crop_digit(frame, digit_pos, size=20):
+    """
+    Crop the frame out of a specific centroid
+    Params:
+        digit : (x, y) digit centroid position
+        frame : frame to crop
+    Return:
+        crop : the cropped image
+    """
+    cropped_img = frame[int(digit_pos[1] - size): int(digit_pos[1] + size),
+                        int(digit_pos[0] - size): int(digit_pos[0] + size)]
+    return cropped_img

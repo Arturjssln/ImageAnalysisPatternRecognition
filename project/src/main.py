@@ -4,8 +4,8 @@ main program
 import argparse
 import numpy as np
 import cv2
-from utils import find_objects, coor_object
-
+from net import Net
+from utils import find_objects, coor_object, crop_digit
 
 parser = argparse.ArgumentParser(description='IAPR Special Project.')
 
@@ -37,6 +37,9 @@ class Calculator:
         self.closest_pos = None
         self.equation = ''
         self.proximity_threshold = 20
+        self.model =  Net()
+        self.model.load_model()
+        self.initial_frame = None
 
     def __enter__(self):
         """
@@ -78,6 +81,7 @@ class Calculator:
                 if current_frame == 0:
                     self.object_position, self.arrow_position, self.arrow_color = \
                         find_objects(frame)
+                    self.initial_frame = frame.copy()
                 else:
                     self.find_arrow(frame)
                     self.compute_closest_object()
@@ -120,14 +124,25 @@ class Calculator:
             predicted = str(self.predict_object())
             # If the equation is empty or if it is a new object, we add it
             if len(self.equation) == 0 or predicted != self.equation[-2]:
-                self.equation += str(self.predict_object()) + ' '
+                self.equation += predicted + ' '
 
     def predict_object(self):
         """
         Predict object at closest position
         """
-        
-        return ''
+        return self.predict_digit(self.closest_pos)
+
+    def predict_digit(self, digit_pos):
+        """
+        Predict the digit at the position digit_pos
+        Params:
+            digit_pos: Position of the center of the digit
+        Return:
+            prediction as integer.
+        """
+        digit_frame = crop_digit(self.initial_frame, digit_pos)
+        prediction = self.model.predict(digit_frame)
+        return np.argmax(prediction)
 
     def frame_display(self, frame):
         """

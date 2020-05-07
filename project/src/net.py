@@ -1,5 +1,5 @@
 import keras
-from keras.datasets import mnist 
+import keras.datasets.mnist as mnist 
 from keras.layers import Dense, Activation, Flatten, Conv2D, MaxPooling2D
 from keras.models import Sequential, load_model
 from keras.utils import to_categorical
@@ -74,5 +74,4 @@ class Net:
         resized = resized / 255
         prediction = self.model.predict(resized)
         prediction = prediction[0]
-        print(prediction)
         return prediction
