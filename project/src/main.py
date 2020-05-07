@@ -1,5 +1,6 @@
 import argparse
 import cv2
+from functions import *
 
 parser = argparse.ArgumentParser(description='IAPR Special Project.')
 
@@ -13,10 +14,6 @@ parser.add_argument('--output',
 
 args = parser.parse_args()
 
-
-def process(frame):
-    # do processing HERE
-    return frame
 
 
 def main():
@@ -33,14 +30,21 @@ def main():
         # Capture frame by frame
         ret, frame = cap.read()
         if ret:
-            print('Processing frame #{}'.format(currentFrame))
+            #print('Processing frame #{}'.format(currentFrame))
             processed_frame = process(frame)
             out.write(frame)
         else:
             break
 
+        if currentFrame == 0:
+            plt.imshow(frame)
+            print('get 1st frame')
+            find_objects(frame)
+
         # To stop duplicate images
         currentFrame += 1
+
+
 
     cap.release()
     out.release()
