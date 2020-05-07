@@ -1,4 +1,4 @@
 keras
 tensorflow
 pillow
-tesseract
+augmentor
