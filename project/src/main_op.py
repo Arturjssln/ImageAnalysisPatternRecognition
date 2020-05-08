@@ -69,25 +69,23 @@ def process_digits(digit_positions, frame):
         cv2.imshow("{}".format(predicted), digit_frame)
         cv2.waitKey(0)
 
-def augment_image(positions, frame):
-    for op, nb in zip(positions, range(len(positions))):
-        crop = crop_digit(op, frame)
-        cv2.imwrite('../data/{}/main.jpg'.format(nb), crop)
-        p = Augmentor.Pipeline("../data/{}".format(nb)) 
+def augment_image():
+    for i in range(5):
+        p = Augmentor.Pipeline("../data/{}".format(i)) 
         p.flip_left_right(0.5) 
         p.black_and_white(0.1) 
         p.rotate(0.3, 25, 25) 
         p.skew(0.4, 0.5) 
         p.zoom(probability = 0.2, min_factor = 1.1, max_factor = 1.5) 
-        p.sample(30) 
+        p.sample(50) 
     
 
 def train_descriptors():
-    descriptor_list = [] # should reach 4 depth with each is a list of the descriptors
-    opencv_version, opencv_version_minor, _ = cv2.__version__.split(".")
+    descriptor_list = [] # should reach 5 depth with each is a list of the descriptors
+    opencv_version, _, _ = cv2.__version__.split(".")
     
     plt.figure()
-    for i in range(4):
+    for i in range(5):
         filenames = [img for img in glob.glob("../data/{}/output/*.jpg".format(i))]
         filenames.sort() # ADD THIS LINE
         images = [cv2.imread(img) for img in filenames]
@@ -103,21 +101,17 @@ def train_descriptors():
             descript_.append(abs(descriptor[start_descriptor:start_descriptor+4]))
         descript_ = np.asarray(descript_)
         descriptor_list.append(descript_)
-        plt.scatter(descript_[:, 0], descript_[:, 1], label=i)
-
-    plt.legend()
-    plt.show(block = True)
 
     ### SVC 
-    x_train = np.concatenate((descriptor_list[0], descriptor_list[1], descriptor_list[2], descriptor_list[3]), axis=0)
-    y_train = np.concatenate((np.zeros(len(descriptor_list[0]), dtype=int), np.ones(len(descriptor_list[1]), dtype=int),np.ones(len(descriptor_list[2]), dtype=int)*2,np.ones(len(descriptor_list[3]),dtype=int)*3), axis=0)
+    x_train = np.concatenate((descriptor_list[0], descriptor_list[1], descriptor_list[2], descriptor_list[3], descriptor_list[4]), axis=0)
+    y_train = np.concatenate((np.zeros(len(descriptor_list[0]), dtype=int), np.ones(len(descriptor_list[1]), dtype=int), np.ones(len(descriptor_list[2]), dtype=int)*2, np.ones(len(descriptor_list[3]),dtype=int)*3, np.ones(len(descriptor_list[4]),dtype=int)*4), axis=0)
 
-        # Create the parameter grid based on the results of random search 
+    # Create the parameter grid based on the results of random search 
     params_grid = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
                         'C': [1, 10, 100, 1000]},
                         {'kernel': ['linear'], 'C': [1, 10, 100, 1000]}]
 
-    S = GridSearchCV(SVC(), params_grid, cv=5, verbose=10)
+    S = GridSearchCV(SVC(), params_grid, cv=2, verbose=10)
     S.fit(x_train, y_train)
     print('Best score for training data: {}'.format(S.best_score_))
     print('Best C: {}'.format(S.best_estimator_.C))
@@ -130,7 +124,7 @@ def train_descriptors():
 def process(frame, augment):
     digit_positions = np.array([[295, 104], [161, 94], [370, 205], [198, 285]])
     if augment :
-        augment_image(digit_positions, frame)
+        augment_image()
     train_descriptors()
     return frame
 
@@ -139,7 +133,7 @@ model = Net()
 
 def main():
     print('Importing file')
-    AUGMENT_IMAGES = False
+    AUGMENT_IMAGES = True
     
     # Playing video from file:
     cap = cv2.VideoCapture(filename = args.input)
