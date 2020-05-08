@@ -79,7 +79,7 @@ def augment_image(positions, frame):
         p.rotate(0.3, 25, 25) 
         p.skew(0.4, 0.5) 
         p.zoom(probability = 0.2, min_factor = 1.1, max_factor = 1.5) 
-        p.sample(50) 
+        p.sample(30) 
     
 
 def train_descriptors():
@@ -94,7 +94,7 @@ def train_descriptors():
 
         descript_ = []
         for img in images:
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY);
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             _,img = cv2.threshold(img,127,255,cv2.THRESH_BINARY_INV)
             contour = find_contour(img, opencv_version)
             contour_complex = convert_contour(contour)
@@ -127,9 +127,10 @@ def train_descriptors():
     joblib.dump(S.best_estimator_, 'model_op.pkl', compress=1)
     print("Training set score for SVM: %f" % final_model.score(x_train, y_train))
 
-def process(frame):
+def process(frame, augment):
     digit_positions = np.array([[295, 104], [161, 94], [370, 205], [198, 285]])
-    augment_image(digit_positions, frame)
+    if augment :
+        augment_image(digit_positions, frame)
     train_descriptors()
     return frame
 
@@ -138,6 +139,8 @@ model = Net()
 
 def main():
     print('Importing file')
+    AUGMENT_IMAGES = False
+    
     # Playing video from file:
     cap = cv2.VideoCapture(filename = args.input)
     # Define the codec and create VideoWriter object.
@@ -151,7 +154,7 @@ def main():
         ret, frame = cap.read()
         if ret:
             print('Processing frame #{}'.format(currentFrame))
-            processed_frame = process(frame)
+            processed_frame = process(frame, AUGMENT_IMAGES)
             out.write(processed_frame)
             break ######################## TO REMOVE THIS LINE ###########################
         else:
