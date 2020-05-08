@@ -41,7 +41,7 @@ class Calculator:
         self.proximity_threshold = 20
         self.model_digit = Net()
         self.model_digit.load_model()
-        self.model_operator = joblib.load('model_op.pkl')
+        self.model_operator = joblib.load('model_op_best.pkl')
         self.initial_frame = None
         self.last_object_pos = None
 
