@@ -86,14 +86,18 @@ def train_descriptors():
     
     plt.figure()
     for i in range(5):
-        filenames = [img for img in glob.glob("../data/{}/output/*.jpg".format(i))]
+        filenames = [img for img in glob.glob("../data/{}/output/*".format(i))]
         filenames.sort() # ADD THIS LINE
         images = [cv2.imread(img) for img in filenames]
 
         descript_ = []
         for img in images:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            _,img = cv2.threshold(img,127,255,cv2.THRESH_BINARY_INV)
+            #_, img = cv2.threshold(img,200,255,cv2.THRESH_BINARY_INV)
+            #img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+
+            _, img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
             contour = find_contour(img, opencv_version)
             contour_complex = convert_contour(contour)
             descriptor = find_descriptor(contour_complex)
@@ -133,7 +137,7 @@ model = Net()
 
 def main():
     print('Importing file')
-    AUGMENT_IMAGES = True
+    AUGMENT_IMAGES = False
     
     # Playing video from file:
     cap = cv2.VideoCapture(filename = args.input)

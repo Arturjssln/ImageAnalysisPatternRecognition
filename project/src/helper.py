@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 MIN_CONTOUR_POINT = 20
 
@@ -7,14 +8,23 @@ def find_contour(img, opencv_version):
     """ Finds and returns the contour of the image"""
     contour = []
     if int(opencv_version) == 3:
-        _, contour, _ = cv2.findContours(img, mode = cv2.RETR_TREE, method = cv2.CHAIN_APPROX_NONE)
+        _, contour, _ = cv2.findContours(img, mode = cv2.RETR_TREE, method = cv2.CHAIN_APPROX_SIMPLE)
     else:
-        contour, _ = cv2.findContours(img.copy(), mode = cv2.RETR_TREE, method = cv2.CHAIN_APPROX_NONE)
+        contour, _ = cv2.findContours(img.copy(), mode = cv2.RETR_TREE, method = cv2.CHAIN_APPROX_SIMPLE)
     
+    
+    # for c in contour:
+    #     cv2.drawContours(img, c, -1, (0, 255, 0), 3)
+
+    # plt.figure()
+    # plt.imshow(img)
+    # plt.show(block =True)
+
     contour_array = contour[0].reshape(-1, 2)
     # minimum contour size required
-    if contour_array.shape[0] < MIN_CONTOUR_POINT:
-        contour_array = contour[1].reshape(-1, 2)
+
+    # if contour_array.shape[0] < MIN_CONTOUR_POINT:
+    #     contour_array = contour[1].reshape(-1, 2)
     return contour_array
 
 def convert_contour(contour):
