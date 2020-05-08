@@ -1,4 +1,9 @@
 keras
 tensorflow
-pillow
-augmentor
+joblib
+cv2
+numpy
+heapq
+skimage
+sklearn
+sympy

@@ -4,8 +4,10 @@ main program
 import argparse
 import numpy as np
 import cv2
+import joblib
+from sympy import sympify, solve
 from net import Net
-from utils import find_objects, coor_object, crop_digit
+from utils import find_objects, coor_object, crop_digit, get_descriptors
 
 parser = argparse.ArgumentParser(description='IAPR Special Project.')
 
@@ -37,9 +39,11 @@ class Calculator:
         self.closest_pos = None
         self.equation = ''
         self.proximity_threshold = 20
-        self.model =  Net()
-        self.model.load_model()
+        self.model_digit = Net()
+        self.model_digit.load_model()
+        self.model_operator = joblib.load('model_op.pkl')
         self.initial_frame = None
+        self.last_object_pos = None
 
     def __enter__(self):
         """
@@ -90,6 +94,9 @@ class Calculator:
             else:
                 break
             current_frame += 1
+        self.solve_equation()
+        #TODO: NEED TO CHANGE THAT
+        self.out.write(self.frame_display(self.initial_frame))
 
     def find_arrow(self, frame):
         """
@@ -121,16 +128,21 @@ class Calculator:
         if (self.closest_pos[0]-self.arrow_position[0])**2 + \
             (self.closest_pos[1]-self.arrow_position[1])**2 < \
             self.proximity_threshold**2:
-            predicted = str(self.predict_object())
-            # If the equation is empty or if it is a new object, we add it
-            if len(self.equation) == 0 or predicted != self.equation[-2]:
-                self.equation += predicted + ' '
+            if self.last_object_pos is None or self.last_object_pos != self.closest_pos:
+                self.last_object_pos = self.closest_pos
+
+                predicted = str(self.predict_object())
+                # If the equation is empty or if it is a new object, we add it
+                if len(self.equation) == 0 or predicted != self.equation[-2]:
+                    self.equation += predicted + ' '
 
     def predict_object(self):
         """
         Predict object at closest position
         """
-        return self.predict_digit(self.closest_pos)
+        if len(self.equation) == 0 or not str(self.equation[-2]).isnumeric():
+            return self.predict_digit(self.closest_pos)
+        return self.predict_operator(self.closest_pos)
 
     def predict_digit(self, digit_pos):
         """
@@ -141,8 +153,33 @@ class Calculator:
             prediction as integer.
         """
         digit_frame = crop_digit(self.initial_frame, digit_pos)
-        prediction = self.model.predict(digit_frame)
+        prediction = self.model_digit.predict(digit_frame)
         return np.argmax(prediction)
+
+    def predict_operator(self, operator_pos):
+        """
+        Predict the operator at the position operator_pos
+        Params:
+            operator_pos: Position of the center of the operator
+        Return:
+            prediction as integer.
+        """
+        operator_frame = crop_digit(self.initial_frame, operator_pos)
+        descriptors = get_descriptors(operator_frame)
+        prediction = self.model_operator.predict(np.array(descriptors).reshape(1, -1))
+        dictionary = {0: '=', 1: '*', 2: '/', 3: '+'}
+        return dictionary[prediction[0]]
+
+    def solve_equation(self):
+        """
+        Solve equation from string
+        """
+        equation = list(self.equation)
+        equation[-2] = ','
+        equation += 'x'
+        sympy_eq = sympify("Eq(" + "".join(equation).replace(" ", "") + ")")
+        result = solve(sympy_eq)
+        self.equation += str(result[0])
 
     def frame_display(self, frame):
         """
