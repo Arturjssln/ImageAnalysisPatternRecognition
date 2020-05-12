@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 import joblib
 from sympy import sympify, solve
+from fractions import Fraction
 from net import Net
 from utils import find_objects, coor_object, crop_digit, get_descriptors
 
@@ -179,7 +180,7 @@ class Calculator:
         equation += 'x'
         sympy_eq = sympify("Eq(" + "".join(equation).replace(" ", "") + ")")
         result = solve(sympy_eq)
-        self.equation += str(result[0])
+        self.equation += str(float(result[0]))
 
     def frame_display(self, frame):
         """
