@@ -83,6 +83,7 @@ class Calculator:
             ret, frame = self.cap.read()
             if ret:
                 print('Processing frame #{}'.format(current_frame))
+                self.current_frame = frame.copy()
                 if current_frame == 0:
                     self.object_position, self.arrow_position, self.arrow_color = \
                         find_objects(frame)
@@ -96,8 +97,7 @@ class Calculator:
                 break
             current_frame += 1
         self.solve_equation()
-        #TODO: NEED TO CHANGE THAT
-        self.out.write(self.frame_display(self.initial_frame))
+        self.out.write(self.frame_display(self.current_frame))
 
     def find_arrow(self, frame):
         """
