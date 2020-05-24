@@ -1,6 +1,7 @@
 import keras
 from keras.datasets import mnist 
 from keras.layers import Dense, Activation, Flatten, Conv2D, MaxPooling2D
+from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential, load_model
 from keras.utils import to_categorical
 import numpy as np
@@ -30,28 +31,31 @@ class Net:
         train_x = train_x / 255
         test_x = test_x / 255
 
+        train_x, train_y = self.data_augmentation(train_x, train_y)
+        test_x, test_y = self.data_augmentation(test_x, test_y, 10000)
+
         train_y_one_hot = to_categorical(train_y)
         test_y_one_hot = to_categorical(test_y)
 
         self.model = Sequential()
 
-        self.model.add(Conv2D(64, (3,3), input_shape=(28, 28, 1)))
+        self.model.add(Conv2D(512, (3,3), input_shape=(28, 28, 1)))
         self.model.add(Activation('relu'))
         self.model.add(MaxPooling2D(pool_size=(2,2)))
 
-        self.model.add(Conv2D(64, (3,3)))
+        self.model.add(Conv2D(128, (3,3)))
         self.model.add(Activation('relu'))
         self.model.add(MaxPooling2D(pool_size=(2,2)))
 
         self.model.add(Flatten())
-        self.model.add(Dense(64))
+        self.model.add(Dense(256))
 
         self.model.add(Dense(10))
         self.model.add(Activation('softmax'))
 
         self.model.compile(loss=keras.losses.categorical_crossentropy, optimizer=keras.optimizers.Adam(),metrics=['accuracy'])
 
-        self.model.fit(train_x, train_y_one_hot, batch_size=64, epochs=5)
+        self.model.fit(train_x, train_y_one_hot, batch_size=64, epochs=10)
 
         test_loss, test_acc = self.model.evaluate(test_x, test_y_one_hot)
         print('Test loss', test_loss)
@@ -76,3 +80,14 @@ class Net:
         prediction = prediction[0]
         print(prediction)
         return prediction
+
+    def data_augmentation(self, x_train, y_train, augment_size=50000):
+        image_generator = ImageDataGenerator(rotation_range=90)
+        image_generator.fit(x_train, augment=True)
+        randidx = np.random.randint(x_train.shape[0], size=augment_size)
+        x_augmented = x_train[randidx].copy()
+        y_augmented = y_train[randidx].copy()
+        x_augmented = image_generator.flow(x_augmented, batch_size=augment_size, shuffle=False).next()
+        print(x_augmented.shape)
+        return np.concatenate((x_train, x_augmented)), np.concatenate((y_train, y_augmented))
+

@@ -7,6 +7,7 @@ import numpy as np
 from net import Net
 from pytesseract import *
 from PIL import Image
+import Augmentor
 
 
 parser = argparse.ArgumentParser(description='IAPR Special Project.')
@@ -55,7 +56,6 @@ def process_digits(digit_positions, frame):
     """
     #processed digits
     for digit in digit_positions:
-        break
         digit_frame = crop_digit(digit, frame)
         predicted = predict_digit(digit_frame)
         cv2.imshow("{}".format(predicted), digit_frame)
@@ -65,7 +65,6 @@ def process(frame):
     digit_positions = np.array([[282, 233], [468, 236], [487, 127], [295, 104], [161, 94], [370, 205], [198, 285]])
     process_digits(digit_positions, frame)
     return frame
-
 
 model = Net()
 
