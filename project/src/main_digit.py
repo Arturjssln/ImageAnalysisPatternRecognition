@@ -59,7 +59,7 @@ def process_digits(digit_positions, frame):
         digit_frame = crop_digit(digit, frame)
         predicted = predict_digit(digit_frame)
         cv2.imshow("{}".format(predicted), digit_frame)
-        cv2.waitKey(0)
+        cv2.waitKey(1000)
 
 def process(frame):
     digit_positions = np.array([[282, 233], [468, 236], [487, 127], [295, 104], [161, 94], [370, 205], [198, 285]])
