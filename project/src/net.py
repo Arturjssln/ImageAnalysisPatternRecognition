@@ -1,7 +1,7 @@
 import keras
 from keras.datasets import mnist 
 from keras.layers import Dense, Activation, Flatten, Conv2D, MaxPooling2D
-from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing.image import ImageDataGenerator, apply_affine_transform
 from keras.models import Sequential, load_model
 from keras.utils import to_categorical
 import numpy as np
@@ -31,8 +31,10 @@ class Net:
         train_x = train_x / 255
         test_x = test_x / 255
 
-        train_x, train_y = self.data_augmentation(train_x, train_y)
-        test_x, test_y = self.data_augmentation(test_x, test_y, 10000)
+        print(train_x.shape, test_x.shape)
+        train_x, train_y = self.augment_data(train_x[:1000], train_y[:1000])
+        test_x, test_y = self.augment_data(test_x[:1000], test_y[:1000])
+        print(train_x.shape, test_x.shape)
 
         train_y_one_hot = to_categorical(train_y)
         test_y_one_hot = to_categorical(test_y)
@@ -70,11 +72,12 @@ class Net:
         """
         Predict the digit from a frame, but with a resize to fit our Net
         """
+        print(digit_frame.shape)
         resized = cv2.resize(digit_frame, (28, 28), interpolation = cv2.INTER_CUBIC)
         gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
         resized = gray.reshape(-1, 28, 28, 1)  
         ### We need to invert the image as the background is represented as 0 value in MNIST
-        resized = cv2.bitwise_not(resized)      
+        resized = cv2.bitwise_not(resized) 
         resized = resized / 255
         prediction = self.model.predict(resized)
         prediction = prediction[0]
@@ -87,7 +90,16 @@ class Net:
         randidx = np.random.randint(x_train.shape[0], size=augment_size)
         x_augmented = x_train[randidx].copy()
         y_augmented = y_train[randidx].copy()
-        x_augmented = image_generator.flow(x_augmented, batch_size=augment_size, shuffle=False).next()
-        print(x_augmented.shape)
+        x_augmented = image_generator.flow(x_augmented, batch_size=augment_size, shuffle=False)
         return np.concatenate((x_train, x_augmented)), np.concatenate((y_train, y_augmented))
 
+    def augment_data(self, train_x, train_y):
+        augmented_image = []
+        augmented_image_labels = []
+
+        for num in range(0, train_x.shape[0]):
+            for angle in np.arange(0, 360, 10):
+                augmented_image.append(apply_affine_transform(train_x[num], theta=angle, fill_mode='constant', row_axis=0, col_axis=1, channel_axis=2))
+                augmented_image_labels.append(train_y[num])
+
+        return np.array(augmented_image), np.array(augmented_image_labels)
