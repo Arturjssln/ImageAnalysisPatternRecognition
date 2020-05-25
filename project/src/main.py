@@ -45,6 +45,7 @@ class Calculator:
         self.model_operator = joblib.load('model_op_best.pkl')
         self.initial_frame = None
         self.last_object_pos = None
+        self.robot_path = []
 
     def __enter__(self):
         """
@@ -109,6 +110,7 @@ class Calculator:
         closing = cv2.morphologyEx(
             mask, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10, 10)))
         self.arrow_position = coor_object(closing)
+        self.robot_path.append(self.arrow_position)
 
     def compute_closest_object(self):
         """
@@ -187,31 +189,44 @@ class Calculator:
         Prepare frame for video
         """
         out = self.display_objects(frame)
-        out = self.display_equation(frame)
+        out = self.display_robot_path(out)
+        out = self.display_equation(out)
+        return out
+
+    def display_robot_path(self, frame):
+        """
+        Display robot path on frame
+        """
+        out = frame.copy()
+        for i in range(len(self.robot_path)-1):
+            start = (int(self.robot_path[i][0]),  int(self.robot_path[i][1]))
+            end = (int(self.robot_path[i+1][0]),  int(self.robot_path[i+1][1]))
+            out = cv2.line(out, start, end, color=(255, 0, 0), thickness=2)
         return out
 
     def display_objects(self, frame):
         """
         Display object position on frame
         """
+        out = frame.copy()
         size = np.array([20, 20])
         # Draw digit and sign cases
         object_position = [np.array(elt) for elt in self.object_position]
         for pos in object_position:
             top_left = pos - size
             bottom_right = pos + size
-            frame = cv2.rectangle(
-                frame, (int(top_left[0]), int(top_left[1])),
+            out = cv2.rectangle(
+                out, (int(top_left[0]), int(top_left[1])),
                 (int(bottom_right[0]), int(bottom_right[1])),
                 (255, 0, 0), thickness=2)
         # Draw arrow case
         top_left = np.array(self.arrow_position) - 2*size
         bottom_right = np.array(self.arrow_position) + 2*size
-        frame = cv2.rectangle(
-            frame, (int(top_left[0]), int(top_left[1])),
+        out = cv2.rectangle(
+            out, (int(top_left[0]), int(top_left[1])),
             (int(bottom_right[0]), int(bottom_right[1])),
             (0, 0, 255), thickness=2)
-        return frame
+        return out
 
     def display_equation(self, frame):
         """
@@ -222,7 +237,7 @@ class Calculator:
         text_x = (frame.shape[1] - textsize[0]) // 2
         text_y = (frame.shape[0] + textsize[1]) * 3 // 4
         frame = cv2.putText(frame, self.equation,
-                            (text_x, text_y), font, 1, (255, 0, 0), 2)
+                            (text_x, text_y), font, 1, (0, 0, 0), 2)
         return frame
 
 def main():

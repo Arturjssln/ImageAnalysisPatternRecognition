@@ -117,13 +117,12 @@ def find_objects(frame):
     avg_coor = []
     for label_choice in range(1, nb_objects+1):
         _, pxl, coor = extract_object(label, label_unique[label_choice])
-        nb_pixels.append(pxl)
-        avg_coor.append(coor)
-    #remove line in middle
-    idx = heapq.nlargest(3, range(len(nb_pixels)), key=nb_pixels.__getitem__)[:2]
-    arrow_coord = avg_coor[idx[0]]
-    arrow_color = color_arrow(label, label_unique, frame, idx[0]+1)
-    avg_coor = [i for j, i in enumerate(avg_coor) if j not in idx]
+        if pxl < 300: 
+            avg_coor.append(coor)
+        elif pxl > 1500:
+            arrow_coord = coor
+            arrow_color = color_arrow(label, label_unique, frame, label_choice)
+
     return avg_coor, arrow_coord, arrow_color
 
 
