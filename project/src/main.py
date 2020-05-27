@@ -231,8 +231,8 @@ class Calculator:
         """
         out = frame.copy()
         for i in range(len(self.robot_path)-1):
-            start = (int(self.robot_path[i][0]),  int(self.robot_path[i][1]))
-            end = (int(self.robot_path[i+1][0]),  int(self.robot_path[i+1][1]))
+            start = (int(self.robot_path[i][0]), int(self.robot_path[i][1]))
+            end = (int(self.robot_path[i+1][0]), int(self.robot_path[i+1][1]))
             out = cv2.line(out, start, end, color=(255, 0, 0), thickness=2)
         return out
 
