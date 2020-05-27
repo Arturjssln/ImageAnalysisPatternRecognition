@@ -6,6 +6,7 @@ from skimage.color import rgb2gray
 import numpy as np
 import skimage.filters as filt
 import cv2
+import matplotlib.pyplot as plt
 
 def threshold(img, th1=None, th2=None):
     """
@@ -40,13 +41,9 @@ def coor_object(object_):
     """
     Return the coordinate of the center of an object
     """
-    nn_zero_col = np.any(object_, 0)
-    nn_zero_row = np.any(object_, 1)
-    col = np.linspace(0, len(object_[0]) - 1, num=len(object_[0]), dtype=int)
-    row = np.linspace(0, len(object_) - 1, num=len(object_), dtype=int)
-    pos_x = np.mean(col[nn_zero_col])
-    pos_y = np.mean(row[nn_zero_row])
-    return [pos_x, pos_y]
+    pos_x, pos_y = np.where(object_ != 0)
+    
+    return [pos_y.mean(), pos_x.mean()]
 
 def extract_object(image, label):
     """
@@ -65,7 +62,11 @@ def color_arrow(label, label_unique, frame, label_choice):
     Return the color of an object (only used for arrow)
     """
     img, _, _ = extract_object(label, label_unique[label_choice])
-    return [(frame[:, :, i] * img).mean() for i in range(3)]
+    closing = cv2.morphologyEx(img, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
+    mask = cv2.morphologyEx(closing, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8))
+    plt.imshow(mask) #TODO: REMOVE
+    plt.show() #TODO: REMOVE
+    return [(frame[:, :, i] * mask).mean() for i in range(3)]
 
 
 def find_objects(frame):
@@ -109,6 +110,7 @@ def find_objects(frame):
             val_min = check(label_neighbors, label[i, j])
             if check(label_neighbors, label[i, j]):
                 label[np.where(label == label[i, j])] = val_min
+    
     label_unique = np.unique(label)
     # Background is not an object so we subtract 1
     nb_objects = len(label_unique) - 1

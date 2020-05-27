@@ -4,11 +4,10 @@ main program
 import argparse
 import numpy as np
 import cv2
-import joblib
 from sympy import sympify, solve
 from net_digit import Net
 from net_op import NetOp
-from utils import find_objects, coor_object, crop_digit, get_descriptors
+from utils import find_objects, coor_object, crop_digit
 
 parser = argparse.ArgumentParser(description='IAPR Special Project.')
 
@@ -59,7 +58,7 @@ class Calculator:
         self.arrow_color = None
         self.closest_pos = None
         self.equation = ''
-        self.proximity_threshold = 20
+        self.proximity_threshold = 30
         self.initial_frame = None
         self.current_frame =  None
         self.last_object_pos = None
@@ -109,8 +108,7 @@ class Calculator:
         Process frames one by one to analyze
         """
         if self.cap is None or self.out is None:
-            print("ERROR : Use this function inside a with statement")
-            return
+            raise NameError('Use this function inside a with statement')
         current_frame = 0
         while self.cap.isOpened():
             # Capture frame by frame
@@ -190,7 +188,11 @@ class Calculator:
         """
         digit_frame = crop_digit(self.initial_frame, digit_pos)
         prediction = self.model_digit.predict(digit_frame)
-        return np.argmax(prediction)
+        prediction = np.argmax(prediction)
+        # If number predicted is 9, convert to 6
+        if prediction == 9:
+            prediction = 6
+        return prediction
 
     def predict_operator(self, operator_pos):
         """
@@ -209,11 +211,14 @@ class Calculator:
         """
         Solve equation from string
         """
+        if str(self.equation[-2]).isnumeric():
+            self.equation += '= '
         equation = list(self.equation)
         equation[-2] = ','
         equation += 'x'
         sympy_eq = sympify("Eq(" + "".join(equation).replace(" ", "") + ")")
         result = solve(sympy_eq)
+        self.equation = self.equation[:-2] + '= '
         self.equation += str(float(result[0]))
 
     def frame_display(self, frame):
@@ -233,7 +238,7 @@ class Calculator:
         for i in range(len(self.robot_path)-1):
             start = (int(self.robot_path[i][0]), int(self.robot_path[i][1]))
             end = (int(self.robot_path[i+1][0]), int(self.robot_path[i+1][1]))
-            out = cv2.line(out, start, end, color=(255, 0, 0), thickness=2)
+            out = cv2.line(out, start, end, color=(255, 255, 255), thickness=1)
         return out
 
     def display_objects(self, frame):
@@ -268,8 +273,12 @@ class Calculator:
         textsize = cv2.getTextSize(self.equation, font, 1, 2)[0]
         text_x = (frame.shape[1] - textsize[0]) // 2
         text_y = (frame.shape[0] + textsize[1]) * 3 // 4
-        frame = cv2.putText(frame, self.equation,
+        box_coords = ((text_x-5, text_y+10), (text_x+textsize[0]+5, text_y-textsize[1]-10))
+        overlay = frame.copy()
+        overlay = cv2.rectangle(overlay, box_coords[0], box_coords[1], (255, 255, 255), cv2.FILLED)
+        overlay = cv2.putText(overlay, self.equation,
                             (text_x, text_y), font, 1, (0, 0, 0), 2)
+        frame = cv2.addWeighted(overlay, 0.4, frame, 1 - 0.4, 0)
         return frame
 
 def main():
