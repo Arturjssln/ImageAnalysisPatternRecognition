@@ -11,8 +11,9 @@ class Net:
     def __init__(self):
         self.model = None
 
-    def load_model(self, filename='model.h5'):
+    def load_model(self, filename):
         try:
+            print('Loading {}'.format(filename))
             self.model = load_model(filename)
         except:
             print('could not load model')
@@ -20,7 +21,7 @@ class Net:
     def train(self):
         """
         """
-        (train_x,train_y), (test_x,test_y) = mnist.load_data()
+        (train_x, train_y), (test_x, test_y) = mnist.load_data()
 
         train_x = train_x.reshape(-1, 28, 28, 1)
         test_x = test_x.reshape(-1, 28, 28, 1)

@@ -39,7 +39,7 @@ def crop_digit(digit, frame, HALF_WIDTH = 20):
     Return:
         crop : the cropped image
     """
-    crop_img = frame[(digit[1] - HALF_WIDTH) : (digit[1] + HALF_WIDTH), (digit[0] - HALF_WIDTH) : (digit[0] + HALF_WIDTH) ]
+    crop_img = frame[(digit[1] - HALF_WIDTH) : (digit[1] + HALF_WIDTH), (digit[0] - HALF_WIDTH) : (digit[0] + HALF_WIDTH)]
     return crop_img
 
 def predict_digit(img):

@@ -7,22 +7,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import cv2
+import glob
 
 class NetOp:
 
     def __init__(self):
-        pass
+        self.model = None
 
-    def load_model(self, filename='model.h5'):
+    def load_model(self, filename):
         try:
-            self.model = load_model(filename)
+            print('Loading {}'.format(filename))
+            self.model = joblib.load(filename)
         except:
             print('could not load model')
 
-    def train(self, train_x, train_y):
+    def train(self):
         """
         """
-        train_x, test_x, train_y, test_y = train_test_split(train_x, train_y, test_size=0.3)
+        x_data = []
+        y_data = []
+        for i in range(5):
+            filenames = [img for img in glob.glob("../data/{}/output/*".format(i))]
+            filenames.sort()
+            images = [cv2.imread(img) for img in filenames]
+
+            for img in images:
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                _, img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+                img = cv2.resize(img, (28, 28), interpolation=cv2.INTER_AREA)
+
+                x_data.append(img)
+                y_data.append(i)
+        x_data = np.asarray(x_data)
+        y_data = np.asarray(y_data)
+
+        train_x, test_x, train_y, test_y = train_test_split(x_data, y_data, test_size=0.3)
         train_x = train_x.reshape(-1, 28, 28, 1)
         test_x = test_x.reshape(-1, 28, 28, 1)
         train_x = train_x.astype('float32')
@@ -67,10 +86,9 @@ class NetOp:
         Predict the digit from a frame, but with a resize to fit our Net
         """
         img = cv2.cvtColor(op_img, cv2.COLOR_BGR2GRAY)
-
         _, img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-        img = cv2.resize(img, (28, 28), interpolation = cv2.INTER_AREA)
-        resized = img.reshape(-1, 28, 28, 1)  
+        img = cv2.resize(img, (28, 28), interpolation=cv2.INTER_AREA)
+        resized = img.reshape(-1, 28, 28, 1)
         resized = resized / 255
         prediction = self.model.predict(resized)
         prediction = prediction[0]

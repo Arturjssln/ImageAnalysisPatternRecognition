@@ -6,7 +6,6 @@ import numpy as np
 import cv2
 import joblib
 from sympy import sympify, solve
-from fractions import Fraction
 from net_digit import Net
 from net_op import NetOp
 from utils import find_objects, coor_object, crop_digit, get_descriptors
@@ -14,11 +13,11 @@ from utils import find_objects, coor_object, crop_digit, get_descriptors
 parser = argparse.ArgumentParser(description='IAPR Special Project.')
 
 parser.add_argument('--input',
-                    type=str, default='../data/robot_parcours_1.avi',
+                    type=str, default='../data/robot_parcours.avi',
                     help='input path video')
 
 parser.add_argument('--output',
-                    type=str, default='../results/robot_parcours_1.avi',
+                    type=str, default='../results/robot_parcours.avi',
                     help='output result path video')
 
 parser.add_argument('--train_operators',
@@ -29,9 +28,13 @@ parser.add_argument('--train_digits',
                     action='store_true', default=False,
                     help='Enable the digits training')
 
-parser.add_argument('--operator_analyser',
-                    type=str, default='nn',
-                    help='Choice of the method used to analyse operators signs. (nn, )')
+parser.add_argument('--digit_model',
+                    type=str, default='model.h5',
+                    help='Choice of the model file to use')
+
+parser.add_argument('--operator_model',
+                    type=str, default='model_op_best.pkl',
+                    help='Choice of the model file to use')
 
 args = parser.parse_args()
 
@@ -43,8 +46,8 @@ class Calculator:
         """
         Initialization of the class
         """
-        self.input_path = args.input_path
-        self.output_path = args.output_path
+        self.input_path = args.input
+        self.output_path = args.output
         self.cap = None
         self.out = None
         self.object_position = None
@@ -54,25 +57,25 @@ class Calculator:
         self.equation = ''
         self.proximity_threshold = 20
         self.initial_frame = None
+        self.current_frame =  None
         self.last_object_pos = None
         self.robot_path = []
         self.model_digit = Net()
         self.model_operator = NetOp()
 
-        self.operators_analyser = args.operator_analyser
+        self.digit_model_path = args.digit_model
+        self.operator_model_path = args.operator_model
+
         if args.train_digits:
-            #TODO
             self.model_digit.train()
         else:
-            self.model_digit.load_model()
+            self.model_digit.load_model(self.digit_model_path)
         
         if args.train_operators:
-            #TODO
             self.model_operator.train()
         else:
-            self.model_operator = joblib.load('{}.pkl'.format(self.operators_analyser))
+            self.model_operator.load_model(self.operator_model_path)
 
-        
 
     def __enter__(self):
         """

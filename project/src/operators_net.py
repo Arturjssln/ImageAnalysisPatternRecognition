@@ -84,7 +84,7 @@ def train_model():
     y_data = []
     for i in range(5):
         filenames = [img for img in glob.glob("../data/{}/output/*".format(i))]
-        filenames.sort() # ADD THIS LINE
+        filenames.sort()
         images = [cv2.imread(img) for img in filenames]
 
         descript_ = []
@@ -103,6 +103,7 @@ def train_model():
     y_data = np.asarray(y_data)
     global model
     model.train(x_data, y_data)
+    
 def process(frame, augment):
 
     if augment :
