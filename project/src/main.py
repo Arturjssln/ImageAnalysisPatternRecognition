@@ -9,6 +9,7 @@ from net_digit import Net
 from net_op import NetOp
 from utils import find_objects, coor_object, crop_digit
 
+
 parser = argparse.ArgumentParser(description='IAPR Special Project.')
 
 parser.add_argument('--input',
@@ -39,6 +40,10 @@ parser.add_argument('--augment_images',
                     action='store_true', default=False,
                     help='Augment image if selected')
 
+parser.add_argument('--debug',
+                    action='store_true', default=False,
+                    help='Display debugging mode')
+
 args = parser.parse_args()
 
 class Calculator:
@@ -51,14 +56,14 @@ class Calculator:
         """
         self.input_path = args.input
         self.output_path = args.output
+        self.debug = args.debug
         self.cap = None
         self.out = None
         self.object_position = None
         self.arrow_position = None
-        self.arrow_color = None
         self.closest_pos = None
         self.equation = ''
-        self.proximity_threshold = 30
+        self.proximity_threshold = 30 # pixels
         self.initial_frame = None
         self.current_frame =  None
         self.last_object_pos = None
@@ -117,8 +122,7 @@ class Calculator:
                 print('Processing frame #{}'.format(current_frame))
                 self.current_frame = frame.copy()
                 if current_frame == 0:
-                    self.object_position, self.arrow_position, self.arrow_color = \
-                        find_objects(frame)
+                    self.object_position, self.arrow_position = find_objects(frame)
                     self.initial_frame = frame.copy()
                 else:
                     self.find_arrow(frame)
@@ -133,15 +137,14 @@ class Calculator:
 
     def find_arrow(self, frame):
         """
-        Find the position of the arrow using the known color of the arrow
+        Find the position of the arrowknowing that it is red
         """
-        lower_red = np.array(self.arrow_color)*255 - np.array([70, 70, 70])
-        upper_red = np.array(self.arrow_color)*255 + np.array([70, 70, 70])
-        mask = cv2.inRange(frame, lower_red, upper_red)
-        closing = cv2.morphologyEx(
-            mask, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10, 10)))
-        self.arrow_position = coor_object(closing)
+        mask = cv2.inRange(frame, np.array([0, 0, 100]), np.array([100, 100, 255]))
+        opening = cv2.morphologyEx(
+            mask, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+        self.arrow_position = coor_object(opening)
         self.robot_path.append(self.arrow_position)
+
 
     def compute_closest_object(self):
         """
@@ -225,7 +228,9 @@ class Calculator:
         """
         Prepare frame for video
         """
-        out = self.display_objects(frame)
+        out = frame.copy()
+        if self.debug:
+            out = self.display_objects(out)
         out = self.display_robot_path(out)
         out = self.display_equation(out)
         return out

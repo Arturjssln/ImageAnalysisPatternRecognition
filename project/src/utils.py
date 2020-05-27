@@ -57,18 +57,6 @@ def extract_object(image, label):
     return out, pxl, coor
 
 
-def color_arrow(label, label_unique, frame, label_choice):
-    """
-    Return the color of an object (only used for arrow)
-    """
-    img, _, _ = extract_object(label, label_unique[label_choice])
-    closing = cv2.morphologyEx(img, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
-    mask = cv2.morphologyEx(closing, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8))
-    plt.imshow(mask) #TODO: REMOVE
-    plt.show() #TODO: REMOVE
-    return [(frame[:, :, i] * mask).mean() for i in range(3)]
-
-
 def find_objects(frame):
     """
     Return the coordinates of the digits, of the arrow and the average color of the arrow
@@ -125,8 +113,7 @@ def find_objects(frame):
         # Arrow
         elif pxl > 1500:
             arrow_coord = coor
-            arrow_color = color_arrow(label, label_unique, frame, label_choice)
-    return avg_coor, arrow_coord, arrow_color
+    return avg_coor, arrow_coord
 
 
 def crop_digit(frame, digit_pos, size=20):
