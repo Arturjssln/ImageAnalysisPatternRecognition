@@ -11,3 +11,8 @@ project/.DS_Store
 *.json
 .vscode/settings.json
 *.pyc
+project/data/0/output/*
+project/data/1/output/*
+project/data/2/output/*
+project/data/3/output/*
+project/data/4/output/*
