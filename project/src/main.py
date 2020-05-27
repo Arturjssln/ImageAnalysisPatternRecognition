@@ -7,7 +7,8 @@ import cv2
 import joblib
 from sympy import sympify, solve
 from fractions import Fraction
-from net import Net
+from net_digit import Net
+from net_op import NetOp
 from utils import find_objects, coor_object, crop_digit, get_descriptors
 
 parser = argparse.ArgumentParser(description='IAPR Special Project.')
@@ -20,18 +21,30 @@ parser.add_argument('--output',
                     type=str, default='../results/robot_parcours_1.avi',
                     help='output result path video')
 
+parser.add_argument('--train_operators',
+                    action='store_true', default=False,
+                    help='Enable the operator training')
+
+parser.add_argument('--train_digits',
+                    action='store_true', default=False,
+                    help='Enable the digits training')
+
+parser.add_argument('--operator_analyser',
+                    type=str, default='nn',
+                    help='Choice of the method used to analyse operators signs. (nn, )')
+
 args = parser.parse_args()
 
 class Calculator:
     """
     Class that contains all functions necessary to compute the calculs
     """
-    def __init__(self, input_path, output_path):
+    def __init__(self, args):
         """
         Initialization of the class
         """
-        self.input_path = input_path
-        self.output_path = output_path
+        self.input_path = args.input_path
+        self.output_path = args.output_path
         self.cap = None
         self.out = None
         self.object_position = None
@@ -40,12 +53,26 @@ class Calculator:
         self.closest_pos = None
         self.equation = ''
         self.proximity_threshold = 20
-        self.model_digit = Net()
-        self.model_digit.load_model()
-        self.model_operator = joblib.load('model_op_best.pkl')
         self.initial_frame = None
         self.last_object_pos = None
         self.robot_path = []
+        self.model_digit = Net()
+        self.model_operator = NetOp()
+
+        self.operators_analyser = args.operator_analyser
+        if args.train_digits:
+            #TODO
+            self.model_digit.train()
+        else:
+            self.model_digit.load_model()
+        
+        if args.train_operators:
+            #TODO
+            self.model_operator.train()
+        else:
+            self.model_operator = joblib.load('{}.pkl'.format(self.operators_analyser))
+
+        
 
     def __enter__(self):
         """
@@ -244,7 +271,7 @@ def main():
     """
     main function
     """
-    calculator = Calculator(args.input, args.output)
+    calculator = Calculator(args)
     with calculator:
         calculator.process()
 
