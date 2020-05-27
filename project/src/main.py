@@ -33,7 +33,7 @@ parser.add_argument('--digit_model',
                     help='Choice of the model file to use')
 
 parser.add_argument('--operator_model',
-                    type=str, default='model_op_best.pkl',
+                    type=str, default='operators.h5',
                     help='Choice of the model file to use')
 
 parser.add_argument('--augment_images',
