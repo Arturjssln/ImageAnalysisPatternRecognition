@@ -119,12 +119,13 @@ def find_objects(frame):
     avg_coor = []
     for label_choice in range(1, nb_objects+1):
         _, pxl, coor = extract_object(label, label_unique[label_choice])
+        # Digits
         if pxl < 300: 
             avg_coor.append(coor)
+        # Arrow
         elif pxl > 1500:
             arrow_coord = coor
             arrow_color = color_arrow(label, label_unique, frame, label_choice)
-
     return avg_coor, arrow_coord, arrow_color
 
 
@@ -142,50 +143,3 @@ def crop_digit(frame, digit_pos, size=20):
     return cropped_img
 
 
-def find_contour(img, opencv_version):
-    """
-    Finds and returns the contour of the image
-    """
-    contour = []
-    if int(opencv_version) == 3:
-        _, contour, _ = cv2.findContours(
-            img, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_NONE)
-    else:
-        contour, _ = cv2.findContours(
-            img.copy(), mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_NONE)
-
-    contour_array = contour[0].reshape(-1, 2)
-    # minimum contour size required
-    if contour_array.shape[0] < 20:
-        contour_array = contour[1].reshape(-1, 2)
-    return contour_array
-
-
-def convert_contour(contour):
-    """
-    Convert contours to complex numbers
-    """
-    contour_complex = np.empty(contour.shape[:-1], dtype=complex)
-    contour_complex.real = contour[:, 0]
-    contour_complex.imag = contour[:, 1]
-    return contour_complex
-
-
-def find_descriptor(contour):
-    """
-    Finds and returns the Fourier-Descriptor from the image contour
-    """
-    return np.fft.fft(contour)
-
-
-def get_descriptors(operator_frame):
-    """
-    Return first four descriptors of an opertator
-    """
-    operator_frame = cv2.cvtColor(operator_frame, cv2.COLOR_BGR2GRAY)
-    _, operator_frame = cv2.threshold(
-        operator_frame, 127, 255, cv2.THRESH_BINARY_INV)
-    opencv_version, _, _ = cv2.__version__.split(".")
-    contours = find_contour(operator_frame, opencv_version)
-    contours = convert_contour(contours)
-    return abs(find_descriptor(contours)[:4])
