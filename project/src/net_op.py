@@ -19,7 +19,7 @@ class NetOp:
             print('Loading {}'.format(filename))
             self.model = joblib.load(filename)
         except:
-            print('could not load model')
+            print('could not load model OPERATOR')
 
     def train(self):
         """

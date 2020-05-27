@@ -16,7 +16,7 @@ class Net:
             print('Loading {}'.format(filename))
             self.model = load_model(filename)
         except:
-            print('could not load model')
+            print('could not load model DIGIT')
 
     def train(self):
         """
