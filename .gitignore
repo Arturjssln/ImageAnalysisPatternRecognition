@@ -10,5 +10,5 @@ project/.DS_Store
 .DS_Store
 *.json
 .vscode/settings.json
-project/data/*
+project/data/
 *.pyc
