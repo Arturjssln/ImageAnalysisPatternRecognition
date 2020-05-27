@@ -1,7 +1,6 @@
 """
     Utility functions
 """
-import heapq
 from skimage.color import rgb2gray
 import numpy as np
 import skimage.filters as filt

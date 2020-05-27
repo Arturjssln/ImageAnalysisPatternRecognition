@@ -1,9 +1,0 @@
-keras
-tensorflow
-joblib
-cv2
-numpy
-heapq
-skimage
-sklearn
-sympy

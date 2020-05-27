@@ -137,7 +137,7 @@ class Calculator:
 
     def find_arrow(self, frame):
         """
-        Find the position of the arrowknowing that it is red
+        Find the position of the arrow, knowing that it is red
         """
         mask = cv2.inRange(frame, np.array([0, 0, 100]), np.array([100, 100, 255]))
         opening = cv2.morphologyEx(
