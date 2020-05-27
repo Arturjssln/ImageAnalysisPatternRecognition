@@ -36,6 +36,10 @@ parser.add_argument('--operator_model',
                     type=str, default='model_op_best.pkl',
                     help='Choice of the model file to use')
 
+parser.add_argument('--augment_images',
+                    action='store_true', default=False,
+                    help='Augment image if selected')
+
 args = parser.parse_args()
 
 class Calculator:
@@ -61,8 +65,7 @@ class Calculator:
         self.last_object_pos = None
         self.robot_path = []
         self.model_digit = Net()
-        self.model_operator = NetOp()
-
+        self.model_operator = NetOp(args.augment_images)
         self.digit_model_path = args.digit_model
         self.operator_model_path = args.operator_model
 

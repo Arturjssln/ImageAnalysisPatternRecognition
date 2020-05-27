@@ -8,11 +8,15 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import cv2
 import glob
+import Augmentor
 
 class NetOp:
 
-    def __init__(self):
+    def __init__(self, augment):
         self.model = None
+        self.augment = augment
+        if self.augment:
+            self.augment_image()
 
     def load_model(self, filename):
         try:
@@ -20,6 +24,15 @@ class NetOp:
             self.model = joblib.load(filename)
         except:
             print('could not load model OPERATOR')
+
+    def augment_image(self):
+        for i in range(5):
+            p = Augmentor.Pipeline("../data/{}".format(i)) 
+            p.flip_left_right(0.5) 
+            p.rotate(0.3, 25, 25) 
+            p.skew(0.4, 0.5) 
+            p.zoom(probability = 0.2, min_factor = 1.1, max_factor = 1.5) 
+            p.sample(1000) 
 
     def train(self):
         """
