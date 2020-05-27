@@ -201,10 +201,9 @@ class Calculator:
             prediction as integer.
         """
         operator_frame = crop_digit(self.initial_frame, operator_pos)
-        descriptors = get_descriptors(operator_frame)
-        prediction = self.model_operator.predict(np.array(descriptors).reshape(1, -1))
-        dictionary = {0: '=', 1: '*', 2: '/', 3: '+'}
-        return dictionary[prediction[0]]
+        prediction = self.model_operator.predict(operator_frame)
+        dictionary = {0: '=', 1: '*', 2: '/', 3: '+', 4: '-'}
+        return dictionary[prediction]
 
     def solve_equation(self):
         """

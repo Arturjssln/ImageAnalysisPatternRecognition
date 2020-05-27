@@ -20,10 +20,9 @@ class NetOp:
 
     def load_model(self, filename):
         try:
-            print('Loading {}'.format(filename))
-            self.model = joblib.load(filename)
+            self.model = load_model(filename)
         except:
-            print('could not load model OPERATOR')
+            print('could not load model {}'.format(filename))
 
     def augment_image(self):
         for i in range(5):
@@ -90,7 +89,7 @@ class NetOp:
         print('Test accuracy', test_acc)
 
         predictions = self.model.predict(test_x)
-        print(np.argmax(np.round(predictions[0])))
+        #print(np.argmax(np.round(predictions[0])))
 
         self.model.save("operators.h5")
 
@@ -104,6 +103,6 @@ class NetOp:
         resized = img.reshape(-1, 28, 28, 1)
         resized = resized / 255
         prediction = self.model.predict(resized)
-        prediction = prediction[0]
-        print(prediction)
+        prediction = np.argmax(prediction)
+        #print(prediction)
         return prediction
