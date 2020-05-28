@@ -9,6 +9,7 @@ import cv2
 from sympy import sympify, solve
 from net_digit import Net
 from net_op import NetOp
+from mlle import Mlle
 from utils import find_objects, coor_object, crop_digit
 
 
@@ -22,12 +23,16 @@ parser.add_argument('--output',
                     type=str, default='../results/robot_parcours.avi',
                     help='output result path video')
 
+parser.add_argument('--train_mlle',
+                    action='store_true', default=False,
+                    help='Enable the second stage digits training')
+
 parser.add_argument('--train_operators',
                     action='store_true', default=False,
                     help='Enable the operator training')
 
 parser.add_argument('--train_digits',
-                    action='store_true', default=False,
+                    action='store_true', default=True,
                     help='Enable the digits training')
 
 parser.add_argument('--digit_model',
@@ -37,6 +42,10 @@ parser.add_argument('--digit_model',
 parser.add_argument('--operator_model',
                     type=str, default='operators.h5',
                     help='Choice of the model file to use')
+
+parser.add_argument('--mlle_model',
+                    type=str, default='mlle.h5',
+                    help='Choice of the model file to use for the second stage digits')
 
 parser.add_argument('--augment_images',
                     action='store_true', default=False,
@@ -71,9 +80,11 @@ class Calculator:
         self.last_object_pos = None
         self.robot_path = []
         self.model_digit = Net()
+        self.model_second_stage = Mlle()
         self.model_operator = NetOp(args.augment_images)
         self.digit_model_path = args.digit_model
         self.operator_model_path = args.operator_model
+        self.second_stage_model_path = args.mlle_model
 
         if args.train_digits:
             self.model_digit.train()
@@ -84,6 +95,11 @@ class Calculator:
             self.model_operator.train()
         else:
             self.model_operator.load_model(self.operator_model_path)
+        if args.train_mlle:
+            self.model_second_stage.train()
+        else:
+            self.model_second_stage.load_model(self.second_stage_model_path)
+
 
 
     def __enter__(self):
@@ -200,6 +216,7 @@ class Calculator:
         # If number predicted is 9, convert to 6
         if prediction == 9:
             prediction = 6
+
         return prediction
 
     def predict_operator(self, operator_pos):
