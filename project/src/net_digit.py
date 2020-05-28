@@ -54,8 +54,8 @@ class Net:
         y_augmented = y_train[randidx].copy()
         x_augmented = image_generator.flow(x_augmented, np.zeros(augment_size), batch_size=augment_size, shuffle=False).next()[0]
         # append augmented data to trainset
-        x_train = np.concatenate((x_train, x_augmented))
-        y_train = np.concatenate((y_train, y_augmented))
+        x_train = np.concatenate((x_augmented, x_train))
+        y_train = np.concatenate((y_augmented, y_train))
         return x_train, y_train
 
     def train(self):
@@ -72,6 +72,11 @@ class Net:
         test_x = test_x.astype('float32')
         train_x = train_x / 255
         test_x = test_x / 255
+<<<<<<< Updated upstream
+=======
+        #train_x, train_y = self.data_augmentation(train_x, train_y, 50000)
+        #test_x, test_y = self.data_augmentation(test_x, test_y, 5000)
+>>>>>>> Stashed changes
 
         train_x, train_y = self.data_augmentation(train_x, train_y, 5000)
         test_x, test_y = self.data_augmentation(test_x, test_y, 5000)
@@ -115,12 +120,48 @@ class Net:
         """
         if self.model is None:
             raise NameError('model has not been trained')
+
         resized = cv2.resize(digit_frame, (28, 28), interpolation = cv2.INTER_CUBIC)
         gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+<<<<<<< Updated upstream
         resized = gray.reshape(-1, 28, 28, 1)  
+=======
+
+        _, gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+        resized = gray.reshape(-1, 28, 28, 1)
+>>>>>>> Stashed changes
         ### We need to invert the image as the background is represented as 0 value in MNIST
         resized = cv2.bitwise_not(resized)      
         resized = resized / 255
+<<<<<<< Updated upstream
         prediction = self.model.predict(resized)
         prediction = prediction[0]
         return prediction
+=======
+
+        preds = np.empty((0, 10), dtype='float32')
+        for angle in range(0, 360, 45):
+            im = self.rotate_image(resized.reshape(28, 28, 1), angle)
+            plt.figure()
+            plt.imshow(im)
+            plt.show(block=True)
+            im = im.reshape(-1, 28, 28, 1)
+            p = self.model.predict(im)[0]
+            print(p.shape)
+            preds = np.vstack((preds, p))
+
+        preds = preds.ravel()
+
+        # prediction = self.model.predict(resized)
+        # prediction = prediction[0]
+        print(np.argmax(preds) % 10)
+        return preds
+
+
+    def rotate_image(self, image, angle):
+        image_center = tuple(np.array(image.shape[1::-1]) / 2)
+        rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
+        result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
+        return result
+>>>>>>> Stashed changes

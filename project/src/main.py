@@ -209,7 +209,7 @@ class Calculator:
         """
         digit_frame = crop_digit(self.initial_frame, digit_pos)
         prediction = self.model_digit.predict(digit_frame)
-        prediction = np.argmax(prediction)
+        prediction = np.argmax(prediction )%10
         # If number predicted is 9, convert to 6
         if prediction == 9:
             prediction = 6
