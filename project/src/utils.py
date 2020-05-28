@@ -6,6 +6,7 @@ import numpy as np
 import skimage.filters as filt
 import cv2
 import matplotlib.pyplot as plt
+from itertools import product
 
 def threshold(img, th1=None, th2=None):
     """
@@ -112,6 +113,21 @@ def find_objects(frame):
         # Arrow
         elif pxl > 1500:
             arrow_coord = coor
+
+    # Cleaning of objects 
+    for pt in avg_coor:
+        dist = distance(pt, arrow_coord)
+        if dist < 70:
+            avg_coor.remove(pt)
+    to_remove = []
+    for i in range(len(avg_coor)):
+        for j in range(i, len(avg_coor)):
+            dist = distance(avg_coor[i], avg_coor[j])
+            if dist > 1e-5 and dist < 50:
+                to_remove.append(set(i,j))
+    print(to_remove)
+            
+
     return avg_coor, arrow_coord
 
 
@@ -128,4 +144,5 @@ def crop_digit(frame, digit_pos, size=20):
                         int(digit_pos[0] - size): int(digit_pos[0] + size)]
     return cropped_img
 
-
+def distance(pt1, pt2):
+    return np.sqrt((pt2[0]-pt1[0])**2 + (pt2[1]-pt1[1])**2)

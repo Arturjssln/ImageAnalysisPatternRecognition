@@ -113,12 +113,16 @@ class Calculator:
         Process frames one by one to analyze
         """
         if self.cap is None or self.out is None:
-            raise NameError('Use this function inside a with statement')
+            raise NameError('Use this function inside a with statement.')
         current_frame = 0
         while self.cap.isOpened():
             # Capture frame by frame
             ret, frame = self.cap.read()
             if ret:
+                #TODO: remove
+                hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)  # convert it to hsv
+                hsv[:, :, 2] += 35
+                frame = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
                 print('Processing frame #{}'.format(current_frame))
                 self.current_frame = frame.copy()
                 if current_frame == 0:
