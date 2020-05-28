@@ -36,11 +36,11 @@ parser.add_argument('--train_digits',
                     help='Enable the digits training')
 
 parser.add_argument('--digit_model',
-                    type=str, default='model.h5',
+                    type=str, default='model_digit_normal.h5',
                     help='Choice of the model file to use')
 
 parser.add_argument('--operator_model',
-                    type=str, default='operators.h5',
+                    type=str, default='model_operators.h5',
                     help='Choice of the model file to use')
 
 parser.add_argument('--mlle_model',
@@ -87,15 +87,19 @@ class Calculator:
         self.second_stage_model_path = args.mlle_model
 
         if args.train_digits:
+            print("Training model_digit")
             self.model_digit.train()
         else:
             self.model_digit.load_model(self.digit_model_path)
         
         if args.train_operators:
+            print("Training model_operator")
             self.model_operator.train()
         else:
             self.model_operator.load_model(self.operator_model_path)
+        
         if args.train_mlle:
+            print("Training second_stage")
             self.model_second_stage.train()
         else:
             self.model_second_stage.load_model(self.second_stage_model_path)
