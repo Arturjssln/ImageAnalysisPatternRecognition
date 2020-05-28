@@ -114,7 +114,7 @@ def find_objects(frame):
         elif pxl > 1500:
             arrow_coord = coor
 
-    # Cleaning of objects 
+    # Cleaning of objects that are too close 
     for pt in avg_coor:
         dist = distance(pt, arrow_coord)
         if dist < 70:
@@ -124,10 +124,12 @@ def find_objects(frame):
         for j in range(i, len(avg_coor)):
             dist = distance(avg_coor[i], avg_coor[j])
             if dist > 1e-5 and dist < 50:
-                to_remove.append(set(i,j))
-    print(to_remove)
-            
-
+                to_remove.append([i,j])
+    if to_remove: # list is not empty
+        print(not to_remove)
+        to_remove = np.array(to_remove)
+        to_remove = np.unique(to_remove[:,1])
+        avg_coor = [avg_coor[i] for i in range(len(avg_coor)) if i not in to_remove]
     return avg_coor, arrow_coord
 
 
