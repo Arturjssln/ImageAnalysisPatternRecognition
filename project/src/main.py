@@ -32,7 +32,7 @@ parser.add_argument('--train_operators',
                     help='Enable the operator training')
 
 parser.add_argument('--train_digits',
-                    action='store_true', default=True,
+                    action='store_true', default=False,
                     help='Enable the digits training')
 
 parser.add_argument('--digit_model',
@@ -87,15 +87,19 @@ class Calculator:
         self.second_stage_model_path = args.mlle_model
 
         if args.train_digits:
+            print("Training model_digit")
             self.model_digit.train()
         else:
             self.model_digit.load_model(self.digit_model_path)
         
         if args.train_operators:
+            print("Training model_operator")
             self.model_operator.train()
         else:
             self.model_operator.load_model(self.operator_model_path)
+        
         if args.train_mlle:
+            print("Training second_stage")
             self.model_second_stage.train()
         else:
             self.model_second_stage.load_model(self.second_stage_model_path)
