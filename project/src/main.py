@@ -123,17 +123,21 @@ class Calculator:
             if ret:
                 print('Processing frame #{}'.format(current_frame))
                 self.current_frame = frame.copy()
+                # Analysis for first frame is more complex than other ones
                 if current_frame == 0:
                     self.object_position, self.arrow_position = find_objects(frame)
                     self.initial_frame = frame.copy()
+                # Analysis of frame (except fram 0)
                 else:
                     self.find_arrow(frame)
                     self.compute_closest_object()
                     self.add_to_equation()
+                # Write new frame in the output video
                 self.out.write(self.frame_display(frame))
             else:
                 break
             current_frame += 1
+        # Solve equation and display it at the end.
         self.solve_equation()
         self.out.write(self.frame_display(self.current_frame))
 
@@ -169,7 +173,6 @@ class Calculator:
             self.proximity_threshold**2:
             if self.last_object_pos is None or self.last_object_pos != self.closest_pos:
                 self.last_object_pos = self.closest_pos
-
                 predicted = str(self.predict_object())
                 # If the equation is empty or if it is a new object, we add it
                 if len(self.equation) == 0 or predicted != self.equation[-2]:
@@ -216,6 +219,7 @@ class Calculator:
         """
         Solve equation from string
         """
+        # Equation must always end with equal sign
         if str(self.equation[-2]).isnumeric():
             self.equation += '= '
         equation = list(self.equation)
@@ -223,6 +227,7 @@ class Calculator:
         equation += 'x'
         sympy_eq = sympify("Eq(" + "".join(equation).replace(" ", "") + ")")
         result = solve(sympy_eq)
+        # Equation must always end with equal sign
         self.equation = self.equation[:-2] + '= '
         self.equation += str(float(result[0]))
 
