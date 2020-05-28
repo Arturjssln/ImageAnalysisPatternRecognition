@@ -32,7 +32,7 @@ parser.add_argument('--train_operators',
                     help='Enable the operator training')
 
 parser.add_argument('--train_digits',
-                    action='store_true', default=True,
+                    action='store_true', default=False,
                     help='Enable the digits training')
 
 parser.add_argument('--digit_model',
