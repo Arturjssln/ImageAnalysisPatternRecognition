@@ -82,21 +82,25 @@ class Calculator:
         self.operator_model_path = args.operator_model
         self.rotate_model_path = args.rotate_model
         if args.train_digits:
-            print("Training model_digit")
+            print("Training model_digit.")
             self.model_digit.train()
         else:
-            print("Loading model_digit")
+            print("Loading model_digit.")
             self.model_digit.load_model(self.digit_model_path)
         
         if args.train_operators:
-            print("Training model_operator")
+            print("Training model_operator.")
             self.model_operator.train()
         else:
-            print("Loading model_operator")
+            print("Loading model_operator.")
             self.model_operator.load_model(self.operator_model_path)
-        print("Loading model_rotate")
-        self.model_rotate.load_model(self.rotate_model_path)
-
+        
+        try:
+            print("Loading model_rotate.")
+            self.model_rotate.load_model(self.rotate_model_path)
+        except:
+            print("Model_rotate is set to None.")
+            self.model_rotate = None
 
     def __enter__(self):
         """
