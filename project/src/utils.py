@@ -79,7 +79,7 @@ def find_objects(frame):
     nb_neighbors = 10
     for i in range(1, im_h - nb_neighbors):
         for j in range(1, im_w - nb_neighbors):
-            # Labeling each pixels of the foreground with same value as its neighbor
+            # Labelling each pixels of the foreground with same value as its neighbor
             if image[i, j] == 0:
                 label_neighbors = np.max([label[i+a, j+b] for a in range(-nb_neighbors, nb_neighbors+1)
                                           for b in range(- nb_neighbors, nb_neighbors + 1)])
