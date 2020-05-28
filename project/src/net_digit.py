@@ -6,7 +6,6 @@ from keras.utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
 
 class Net:
 
@@ -24,7 +23,6 @@ class Net:
             self.model = load_model(filename)
         except:
             print('Could not load model {}'.format(filename))
-
 
     def remove(self, digit, x, y):
         """
@@ -76,65 +74,45 @@ class Net:
         train_x, train_y = self.data_augmentation(train_x, train_y, 50000)
         test_x, test_y = self.data_augmentation(test_x, test_y, 5000)
 
-        for i in range(10):
-            plt.figure()
-            plt.imshow(train_x[-i].reshape(28,28))
-            plt.show(block=True)
-
-
         train_y_one_hot = to_categorical(train_y)
         test_y_one_hot = to_categorical(test_y)
 
         self.model = Sequential()
-
         self.model.add(Conv2D(32, (3, 3), input_shape=(28, 28, 1)))
         self.model.add(Activation('relu'))
-        #self.model.add(MaxPooling2D(pool_size=(2, 2)))
-
         self.model.add(Conv2D(64, (3, 3)))
         self.model.add(Activation('relu'))
         self.model.add(MaxPooling2D(pool_size=(2, 2)))
-        #self.model.add(Dropout(0.25))
         self.model.add(Flatten())
-        
         self.model.add(Dense(128, activation='relu'))
-        #self.model.add(Dropout(0.5))
         self.model.add(Dense(9))
         self.model.add(Activation('softmax'))
-
         self.model.compile(loss=keras.losses.categorical_crossentropy, optimizer=keras.optimizers.Adam(), metrics=['accuracy'])
-
+        #TODO SVEN change the line below
         self.model.fit(train_x[:10000], train_y_one_hot[:10000], batch_size=64, epochs=15)
 
         test_loss, test_acc = self.model.evaluate(test_x, test_y_one_hot)
         print('Test loss', test_loss)
         print('Test accuracy', test_acc)
-
         predictions = self.model.predict(test_x)
-        print(np.argmax(np.round(predictions[0])))
-
         self.model.save("model.h5")
 
-    def predict(self, digit_frame):
+    def predict(self, digit_frame, rotate_model):
         """
-        Predict the digit from a frame, but with a resize to fit our Net
+        Predict the digit from a frame
         """
         if self.model is None:
             raise NameError('model has not been trained')
         resized = cv2.resize(digit_frame, (28, 28), interpolation = cv2.INTER_CUBIC)
-        gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
-        
-        resized = gray.reshape(-1, 28, 28, 1)
+        resized = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+        _, resized = cv2.threshold(resized, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        resized = resized.reshape(-1, 28, 28, 1)
         ### We need to invert the image as the background is represented as 0 value in MNIST
         resized = cv2.bitwise_not(resized)
         resized = resized / 255
-
-
-        plt.figure()
-        plt.imshow(resized.reshape(28,28))
-        plt.show(block=True)
-
+        if rotate_model is not None:
+            resized = rotate_model.correct_rotation(resized)
+            resized = cv2.resize(resized, (28, 28), interpolation=cv2.INTER_CUBIC).reshape(-1, 28, 28, 1)
         prediction = self.model.predict(resized)
         prediction = prediction[0]
-        print(prediction)
         return prediction

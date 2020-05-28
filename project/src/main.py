@@ -9,7 +9,7 @@ import cv2
 from sympy import sympify, solve
 from net_digit import Net
 from net_op import NetOp
-from mlle import Mlle
+from rotate_net import RotateNet
 from utils import find_objects, coor_object, crop_digit
 
 
@@ -23,10 +23,6 @@ parser.add_argument('--output',
                     type=str, default='../results/robot_parcours.avi',
                     help='output result path video')
 
-parser.add_argument('--train_mlle',
-                    action='store_true', default=False,
-                    help='Enable the second stage digits training')
-
 parser.add_argument('--train_operators',
                     action='store_true', default=False,
                     help='Enable the operator training')
@@ -36,16 +32,16 @@ parser.add_argument('--train_digits',
                     help='Enable the digits training')
 
 parser.add_argument('--digit_model',
-                    type=str, default='model_digit_normal.h5',
+                    type=str, default='models/model_digit_normal.h5',
                     help='Choice of the model file to use')
 
 parser.add_argument('--operator_model',
-                    type=str, default='model_operators.h5',
+                    type=str, default='models/model_operators.h5',
                     help='Choice of the model file to use')
 
-parser.add_argument('--mlle_model',
-                    type=str, default='mlle.h5',
-                    help='Choice of the model file to use for the second stage digits')
+parser.add_argument('--rotate_model',
+                    type=str, default='models/model_rotnet.hdf5',
+                    help='Choice of the model file to use')
 
 parser.add_argument('--augment_images',
                     action='store_true', default=False,
@@ -80,30 +76,26 @@ class Calculator:
         self.last_object_pos = None
         self.robot_path = []
         self.model_digit = Net()
-        self.model_second_stage = Mlle()
         self.model_operator = NetOp(args.augment_images)
+        self.model_rotate = RotateNet()
         self.digit_model_path = args.digit_model
         self.operator_model_path = args.operator_model
-        self.second_stage_model_path = args.mlle_model
-
+        self.rotate_model_path = args.rotate_model
         if args.train_digits:
             print("Training model_digit")
             self.model_digit.train()
         else:
+            print("Loading model_digit")
             self.model_digit.load_model(self.digit_model_path)
         
         if args.train_operators:
             print("Training model_operator")
             self.model_operator.train()
         else:
+            print("Loading model_operator")
             self.model_operator.load_model(self.operator_model_path)
-        
-        if args.train_mlle:
-            print("Training second_stage")
-            self.model_second_stage.train()
-        else:
-            self.model_second_stage.load_model(self.second_stage_model_path)
-
+        print("Loading model_rotate")
+        self.model_rotate.load_model(self.rotate_model_path)
 
 
     def __enter__(self):
@@ -215,12 +207,11 @@ class Calculator:
             prediction as integer.
         """
         digit_frame = crop_digit(self.initial_frame, digit_pos)
-        prediction = self.model_digit.predict(digit_frame)
+        prediction = self.model_digit.predict(digit_frame, self.model_rotate)
         prediction = np.argmax(prediction)
         # If number predicted is 9, convert to 6
         if prediction == 9:
             prediction = 6
-
         return prediction
 
     def predict_operator(self, operator_pos):

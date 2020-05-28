@@ -1,5 +1,5 @@
 """
-    Utility functions
+Utility functions
 """
 from skimage.color import rgb2gray
 import numpy as np
