@@ -81,15 +81,12 @@ class NetOp:
         self.model.add(Activation('softmax'))
 
         self.model.compile(loss=keras.losses.categorical_crossentropy, optimizer=keras.optimizers.Adam(),metrics=['accuracy'])
-
+        self.model.summary()
         self.model.fit(train_x, train_y_one_hot, batch_size=64, epochs=6)
 
         test_loss, test_acc = self.model.evaluate(test_x, test_y_one_hot)
         print('Test loss', test_loss)
         print('Test accuracy', test_acc)
-
-        predictions = self.model.predict(test_x)
-        #print(np.argmax(np.round(predictions[0])))
 
         self.model.save("operators.h5")
 

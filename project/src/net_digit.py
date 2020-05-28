@@ -31,32 +31,6 @@ class Net:
         idx = (y != digit).nonzero()
         return x[idx], y[idx]
 
-
-    def data_augmentation(self, x_train, y_train, augment_size=5000):
-        """
-        Aumgent data
-        """
-        image_generator = ImageDataGenerator(
-            rotation_range=360,
-            zoom_range = 0,
-            width_shift_range=0,
-            height_shift_range=0,
-            horizontal_flip=False,
-            vertical_flip=False, 
-            data_format="channels_last",
-            zca_whitening=False)
-        # fit data for zca whitening
-        image_generator.fit(x_train, augment=True)
-        # get transformed images
-        randidx = np.random.randint(x_train.shape[0], size=augment_size)
-        x_augmented = x_train[randidx].copy()
-        y_augmented = y_train[randidx].copy()
-        x_augmented = image_generator.flow(x_augmented, np.zeros(augment_size), batch_size=augment_size, shuffle=False).next()[0]
-        # append augmented data to trainset
-        x_train = np.concatenate((x_train, x_augmented))
-        y_train = np.concatenate((y_train, y_augmented))
-        return x_train, y_train
-
     def train(self):
         """
         """
@@ -71,8 +45,6 @@ class Net:
         test_x = test_x.astype('float32')
         train_x = train_x / 255
         test_x = test_x / 255
-        train_x, train_y = self.data_augmentation(train_x, train_y, 50000)
-        test_x, test_y = self.data_augmentation(test_x, test_y, 5000)
 
         train_y_one_hot = to_categorical(train_y)
         test_y_one_hot = to_categorical(test_y)
@@ -88,13 +60,12 @@ class Net:
         self.model.add(Dense(9))
         self.model.add(Activation('softmax'))
         self.model.compile(loss=keras.losses.categorical_crossentropy, optimizer=keras.optimizers.Adam(), metrics=['accuracy'])
-        #TODO SVEN change the line below
-        self.model.fit(train_x[:10000], train_y_one_hot[:10000], batch_size=64, epochs=15)
+        self.model.summary()
+        self.model.fit(train_x, train_y_one_hot, batch_size=64, epochs=15)
 
         test_loss, test_acc = self.model.evaluate(test_x, test_y_one_hot)
         print('Test loss', test_loss)
         print('Test accuracy', test_acc)
-        predictions = self.model.predict(test_x)
         self.model.save("model.h5")
 
     def predict(self, digit_frame, rotate_model):
