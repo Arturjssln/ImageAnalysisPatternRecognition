@@ -36,11 +36,11 @@ parser.add_argument('--train_digits',
                     help='Enable the digits training')
 
 parser.add_argument('--digit_model',
-                    type=str, default='model.h5',
+                    type=str, default='model_digit_normal.h5',
                     help='Choice of the model file to use')
 
 parser.add_argument('--operator_model',
-                    type=str, default='operators.h5',
+                    type=str, default='model_operators.h5',
                     help='Choice of the model file to use')
 
 parser.add_argument('--mlle_model',
