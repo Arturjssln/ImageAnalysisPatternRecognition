@@ -1,11 +1,11 @@
 """
     Utility functions
 """
-import heapq
 from skimage.color import rgb2gray
 import numpy as np
 import skimage.filters as filt
 import cv2
+import matplotlib.pyplot as plt
 
 def threshold(img, th1=None, th2=None):
     """
@@ -40,13 +40,9 @@ def coor_object(object_):
     """
     Return the coordinate of the center of an object
     """
-    nn_zero_col = np.any(object_, 0)
-    nn_zero_row = np.any(object_, 1)
-    col = np.linspace(0, len(object_[0]) - 1, num=len(object_[0]), dtype=int)
-    row = np.linspace(0, len(object_) - 1, num=len(object_), dtype=int)
-    pos_x = np.mean(col[nn_zero_col])
-    pos_y = np.mean(row[nn_zero_row])
-    return [pos_x, pos_y]
+    pos_x, pos_y = np.where(object_ != 0)
+    
+    return [pos_y.mean(), pos_x.mean()]
 
 def extract_object(image, label):
     """
@@ -58,14 +54,6 @@ def extract_object(image, label):
     pxl = sum(sum(out))
     coor = coor_object(out)
     return out, pxl, coor
-
-
-def color_arrow(label, label_unique, frame, label_choice):
-    """
-    Return the color of an object (only used for arrow)
-    """
-    img, _, _ = extract_object(label, label_unique[label_choice])
-    return [(frame[:, :, i] * img).mean() for i in range(3)]
 
 
 def find_objects(frame):
@@ -109,6 +97,7 @@ def find_objects(frame):
             val_min = check(label_neighbors, label[i, j])
             if check(label_neighbors, label[i, j]):
                 label[np.where(label == label[i, j])] = val_min
+    
     label_unique = np.unique(label)
     # Background is not an object so we subtract 1
     nb_objects = len(label_unique) - 1
@@ -117,13 +106,13 @@ def find_objects(frame):
     avg_coor = []
     for label_choice in range(1, nb_objects+1):
         _, pxl, coor = extract_object(label, label_unique[label_choice])
+        # Digits
         if pxl < 300: 
             avg_coor.append(coor)
+        # Arrow
         elif pxl > 1500:
             arrow_coord = coor
-            arrow_color = color_arrow(label, label_unique, frame, label_choice)
-
-    return avg_coor, arrow_coord, arrow_color
+    return avg_coor, arrow_coord
 
 
 def crop_digit(frame, digit_pos, size=20):
@@ -140,50 +129,3 @@ def crop_digit(frame, digit_pos, size=20):
     return cropped_img
 
 
-def find_contour(img, opencv_version):
-    """
-    Finds and returns the contour of the image
-    """
-    contour = []
-    if int(opencv_version) == 3:
-        _, contour, _ = cv2.findContours(
-            img, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_NONE)
-    else:
-        contour, _ = cv2.findContours(
-            img.copy(), mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_NONE)
-
-    contour_array = contour[0].reshape(-1, 2)
-    # minimum contour size required
-    if contour_array.shape[0] < 20:
-        contour_array = contour[1].reshape(-1, 2)
-    return contour_array
-
-
-def convert_contour(contour):
-    """
-    Convert contours to complex numbers
-    """
-    contour_complex = np.empty(contour.shape[:-1], dtype=complex)
-    contour_complex.real = contour[:, 0]
-    contour_complex.imag = contour[:, 1]
-    return contour_complex
-
-
-def find_descriptor(contour):
-    """
-    Finds and returns the Fourier-Descriptor from the image contour
-    """
-    return np.fft.fft(contour)
-
-
-def get_descriptors(operator_frame):
-    """
-    Return first four descriptors of an opertator
-    """
-    operator_frame = cv2.cvtColor(operator_frame, cv2.COLOR_BGR2GRAY)
-    _, operator_frame = cv2.threshold(
-        operator_frame, 127, 255, cv2.THRESH_BINARY_INV)
-    opencv_version, _, _ = cv2.__version__.split(".")
-    contours = find_contour(operator_frame, opencv_version)
-    contours = convert_contour(contours)
-    return abs(find_descriptor(contours)[:4])
