@@ -1,6 +1,8 @@
 """
 main program
 """
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import argparse
 import numpy as np
 import cv2
@@ -129,7 +131,7 @@ class Calculator:
         Process frames one by one to analyze
         """
         if self.cap is None or self.out is None:
-            raise NameError('Use this function inside a with statement')
+            raise NameError('Use this function inside a with statement.')
         current_frame = 0
         while self.cap.isOpened():
             # Capture frame by frame
