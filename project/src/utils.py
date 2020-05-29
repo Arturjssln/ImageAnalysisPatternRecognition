@@ -108,7 +108,7 @@ def find_objects(frame):
     for label_choice in range(1, nb_objects+1):
         _, pxl, coor = extract_object(label, label_unique[label_choice])
         # Digits
-        if pxl < 300: 
+        if pxl < 300 and pxl > 15: 
             avg_coor.append(coor)
         # Arrow
         elif pxl > 1500:
@@ -117,13 +117,13 @@ def find_objects(frame):
     # Cleaning of objects that are too close 
     for pt in avg_coor:
         dist = distance(pt, arrow_coord)
-        if dist < 70:
+        if dist < 50:
             avg_coor.remove(pt)
     to_remove = []
     for i in range(len(avg_coor)):
         for j in range(i, len(avg_coor)):
             dist = distance(avg_coor[i], avg_coor[j])
-            if dist > 1e-5 and dist < 50:
+            if dist > 1e-5 and dist < 30:
                 to_remove.append([i,j])
     if to_remove: # list is not empty
         print(not to_remove)
